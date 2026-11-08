@@ -48,7 +48,7 @@ export default function Register() {
     }
 
     if (!termsAccepted) {
-      setError('You must accept the terms of service and educational disclaimer.')
+      setError('You must accept the terms of service.')
       return
     }
 
@@ -208,7 +208,7 @@ export default function Register() {
             )}
           </div>
 
-          {/* Terms & Medical Disclaimer Acceptance */}
+          {/* Terms Acceptance */}
           <div className="flex items-start pt-1">
             <input
               id="terms"
@@ -219,7 +219,7 @@ export default function Register() {
               className="w-4 h-4 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700"
             />
             <label htmlFor="terms" className="ml-2.5 block text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-              I acknowledge that this software is strictly for <strong>educational and research purposes</strong> and is NOT a certified clinical diagnostic medical device.
+              I agree to the <strong>Terms of Service</strong> and <strong>Privacy Policy</strong>.
             </label>
           </div>
 

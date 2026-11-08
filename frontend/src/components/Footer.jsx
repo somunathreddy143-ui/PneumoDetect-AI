@@ -1,22 +1,8 @@
-import { Activity, AlertTriangle, Heart } from 'lucide-react'
+import { Activity, Heart } from 'lucide-react'
 
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300">
-      {/* Disclaimer Banner */}
-      <div className="bg-amber-50 border-t-2 border-amber-400">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-amber-800">
-              <strong>Educational Disclaimer:</strong> This tool is for educational and research purposes only.
-              It is <strong>NOT</strong> intended for clinical diagnosis. Always consult a qualified healthcare
-              professional for medical advice and diagnosis.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

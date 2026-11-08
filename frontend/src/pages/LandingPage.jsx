@@ -237,10 +237,6 @@ export default function LandingPage() {
               Login
             </Link>
           </div>
-
-          <p className="text-[11px] text-blue-300/80 pt-4">
-            Research decision-support tool. AI predictions are experimental outputs and not a substitute for professional clinical diagnosis.
-          </p>
         </div>
       </section>
 
