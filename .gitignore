@@ -64,7 +64,8 @@ desktop.ini
 *.log
 npm-debug.log*
 
-# Temp
+# Temp & Archives
 tmp/
 temp/
 *.tmp
+*.zip
