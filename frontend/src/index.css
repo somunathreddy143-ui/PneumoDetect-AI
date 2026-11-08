@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --color-bg-primary: #F8FAFC;
+    --color-text-primary: #0F172A;
+  }
+
+  .dark {
+    --color-bg-primary: #0B0F19;
+    --color-text-primary: #F8FAFC;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}
