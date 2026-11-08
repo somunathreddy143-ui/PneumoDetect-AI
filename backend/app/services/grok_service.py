@@ -311,8 +311,22 @@ class GrokService:
         )
 
         formatted_messages = [{"role": "system", "content": system_instruction}]
-        for msg in conversation_history[-10:]:  # Keep recent context window
-            formatted_messages.append({"role": msg["role"], "content": msg["content"]})
+        if isinstance(conversation_history, str):
+            formatted_messages.append({"role": "user", "content": conversation_history})
+        elif isinstance(conversation_history, list):
+            for msg in conversation_history[-10:]:  # Keep recent context window
+                if isinstance(msg, dict):
+                    formatted_messages.append({
+                        "role": msg.get("role", "user"),
+                        "content": str(msg.get("content", "")),
+                    })
+                elif hasattr(msg, "role") and hasattr(msg, "content"):
+                    formatted_messages.append({
+                        "role": str(msg.role),
+                        "content": str(msg.content),
+                    })
+                elif isinstance(msg, str):
+                    formatted_messages.append({"role": "user", "content": msg})
 
         text, is_live, note = await self.call_grok_chat(formatted_messages, temperature=0.4, max_tokens=850)
 
