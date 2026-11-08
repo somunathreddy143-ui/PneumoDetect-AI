@@ -38,8 +38,13 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('auth:logout', handleExternalLogout)
   }, [])
 
-  const login = async (email, password, rememberMe = false) => {
-    const data = await apiLogin({ email, password, remember_me: rememberMe })
+  const login = async (email, password, rememberMe = false, recaptchaToken = null) => {
+    const data = await apiLogin({
+      email,
+      password,
+      remember_me: rememberMe,
+      recaptcha_token: recaptchaToken,
+    })
     localStorage.setItem('pneumo_access_token', data.access_token)
     localStorage.setItem('pneumo_refresh_token', data.refresh_token)
     setUser(data.user)

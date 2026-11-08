@@ -13,6 +13,7 @@ class UserRegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     confirm_password: str = Field(..., min_length=8, max_length=128)
     terms_accepted: bool = Field(...)
+    recaptcha_token: Optional[str] = None
 
     @field_validator("confirm_password")
     @classmethod
@@ -33,6 +34,7 @@ class UserLoginRequest(BaseModel):
     email: EmailStr
     password: str
     remember_me: bool = False
+    recaptcha_token: Optional[str] = None
 
 
 class UserResponse(BaseModel):

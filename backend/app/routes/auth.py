@@ -19,7 +19,8 @@ from app.schemas.auth import (
     UserRegisterRequest,
     UserResponse,
 )
-from app.services.activity_service import log_user_activity
+from app.services.activity_service import get_client_ip, log_user_activity
+from app.services.recaptcha_service import verify_recaptcha
 from app.services.auth_service import (
     create_access_token,
     create_password_reset_token,
@@ -43,8 +44,19 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user account",
 )
-def register(req: UserRegisterRequest, db: Session = Depends(get_db)):
-    """Register a new user with email and secure password hashing."""
+async def register(
+    req: UserRegisterRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Register a new user with email, secure password hashing, and reCAPTCHA verification."""
+    is_human = await verify_recaptcha(req.recaptcha_token, get_client_ip(request))
+    if not is_human:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google reCAPTCHA verification failed. Please complete the reCAPTCHA challenge.",
+        )
+
     email_clean = req.email.lower().strip()
     existing = db.query(User).filter(User.email == email_clean).first()
     if existing:
@@ -79,8 +91,15 @@ def register(req: UserRegisterRequest, db: Session = Depends(get_db)):
     response_model=TokenResponse,
     summary="Authenticate user and return JWT tokens",
 )
-def login(req: UserLoginRequest, request: Request, db: Session = Depends(get_db)):
+async def login(req: UserLoginRequest, request: Request, db: Session = Depends(get_db)):
     """Authenticate with email and password, returning short-lived access and refresh tokens."""
+    is_human = await verify_recaptcha(req.recaptcha_token, get_client_ip(request))
+    if not is_human:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google reCAPTCHA verification failed. Please complete the reCAPTCHA challenge.",
+        )
+
     email_clean = req.email.lower().strip()
     user = db.query(User).filter(User.email == email_clean).first()
 

@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     XAI_BASE_URL: str = "https://api.x.ai/v1"
     XAI_MODEL: str = "grok-2-latest"
 
+    # --- Google reCAPTCHA v2 ---
+    RECAPTCHA_SECRET_KEY: str = ""
+    RECAPTCHA_SITE_KEY: str = "6Ldk-hYuAAAAAO35F0uypYiXqXhpUWJp4nGK_Zst"
+    RECAPTCHA_VERIFY_URL: str = "https://www.google.com/recaptcha/api/siteverify"
+
     model_config = {
         "env_file": str(_BACKEND_DIR / ".env"),
         "env_file_encoding": "utf-8",

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Activity, Lock, Mail, User, Eye, EyeOff, AlertCircle, CheckCircle2, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import ReCaptchaWidget from '../components/ReCaptchaWidget'
 
 export default function Register() {
   const [fullName, setFullName] = useState('')
@@ -10,8 +11,10 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [termsAccepted, setTermsAccepted] = useState(false)
+  const [recaptchaToken, setRecaptchaToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const recaptchaRef = useRef(null)
 
   const { register } = useAuth()
   const navigate = useNavigate()
@@ -49,6 +52,11 @@ export default function Register() {
       return
     }
 
+    if (!recaptchaToken) {
+      setError('Please complete the Google reCAPTCHA verification.')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -58,10 +66,13 @@ export default function Register() {
         password,
         confirm_password: confirmPassword,
         terms_accepted: termsAccepted,
+        recaptcha_token: recaptchaToken,
       })
       navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.')
+      recaptchaRef.current?.reset()
+      setRecaptchaToken('')
     } finally {
       setLoading(false)
     }
@@ -211,6 +222,14 @@ export default function Register() {
               I acknowledge that this software is strictly for <strong>educational and research purposes</strong> and is NOT a certified clinical diagnostic medical device.
             </label>
           </div>
+
+          {/* Google reCAPTCHA v2 Widget */}
+          <ReCaptchaWidget
+            ref={recaptchaRef}
+            onVerify={(token) => setRecaptchaToken(token)}
+            onExpire={() => setRecaptchaToken('')}
+            onError={() => setError('Failed to load Google reCAPTCHA. Please refresh.')}
+          />
 
           <button
             type="submit"

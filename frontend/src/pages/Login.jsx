@@ -1,16 +1,19 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Activity, Lock, Mail, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
+import ReCaptchaWidget from '../components/ReCaptchaWidget'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  const [recaptchaToken, setRecaptchaToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const recaptchaRef = useRef(null)
 
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -20,13 +23,21 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
+
+    if (!recaptchaToken) {
+      setError('Please complete the Google reCAPTCHA verification.')
+      return
+    }
+
     setLoading(true)
 
     try {
-      await login(email, password, rememberMe)
+      await login(email, password, rememberMe, recaptchaToken)
       navigate(from, { replace: true })
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.')
+      recaptchaRef.current?.reset()
+      setRecaptchaToken('')
     } finally {
       setLoading(false)
     }
@@ -125,6 +136,14 @@ export default function Login() {
             </div>
 
           </div>
+
+          {/* Google reCAPTCHA v2 Widget */}
+          <ReCaptchaWidget
+            ref={recaptchaRef}
+            onVerify={(token) => setRecaptchaToken(token)}
+            onExpire={() => setRecaptchaToken('')}
+            onError={() => setError('Failed to load Google reCAPTCHA. Please refresh.')}
+          />
 
           <button
             type="submit"
