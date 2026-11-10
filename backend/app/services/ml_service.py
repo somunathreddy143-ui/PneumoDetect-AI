@@ -118,7 +118,12 @@ class MLService:
         if not self.is_loaded:
             raise RuntimeError("Model is not loaded.")
 
-        raw_output = self._model.predict(preprocessed_image, verbose=0)  # type: ignore[union-attr]
+        # Direct tensor execution avoids model.predict() dataset iterator overhead and saves ~100MB RAM
+        try:
+            tensor_out = self._model(preprocessed_image, training=False)
+            raw_output = tensor_out.numpy()
+        except Exception:
+            raw_output = self._model.predict(preprocessed_image, verbose=0)  # type: ignore[union-attr]
         prob_pneumonia = float(raw_output[0][0])  # sigmoid output
 
         if prob_pneumonia > 0.5:

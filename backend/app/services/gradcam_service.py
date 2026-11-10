@@ -19,37 +19,19 @@ class GradCAMService:
     # The last convolutional layer in MobileNetV2
     LAST_CONV_LAYER = "Conv_1"
 
-    # ------------------------------------------------------------------ core
-    def generate(
-        self,
-        model,
-        preprocessed_image: np.ndarray,
-        original_image: np.ndarray,
-        predicted_class: int,
-    ) -> tuple[np.ndarray, np.ndarray]:
-        """Compute Grad-CAM and produce a heatmap + overlay.
+    def __init__(self) -> None:
+        self._cached_feature_extractor = None
+        self._cached_head_layers = None
+        self._cached_model_id = None
 
-        Parameters
-        ----------
-        model : tf.keras.Model
-            Loaded Keras model.
-        preprocessed_image : np.ndarray
-            Shape ``(1, 224, 224, 3)`` after ``preprocess_input``.
-        original_image : np.ndarray
-            Original RGB uint8 image (any resolution).
-        predicted_class : int
-            0 = NORMAL, 1 = PNEUMONIA.
+    def _get_feature_extractor_and_head(self, model):
+        """Retrieve or build cached feature extractor submodel to prevent memory leaks."""
+        import tensorflow as tf
 
-        Returns
-        -------
-        heatmap_colored : np.ndarray
-            JET-colormapped heatmap resized to original image dims (uint8 RGB).
-        overlay : np.ndarray
-            0.4-alpha blend of heatmap onto the original image (uint8 RGB).
-        """
-        import tensorflow as tf  # deferred import
+        model_id = id(model)
+        if self._cached_model_id == model_id and self._cached_feature_extractor is not None:
+            return self._cached_feature_extractor, self._cached_head_layers
 
-        # Find the base model and last conv layer
         base_model = None
         last_conv_layer = None
 
@@ -69,19 +51,37 @@ class GradCAMService:
         if last_conv_layer is None or base_model is None:
             raise ValueError(f"Could not locate layer {self.LAST_CONV_LAYER}")
 
-        # Extract features from last conv layer
         feature_extractor = tf.keras.Model(
             inputs=base_model.input,
             outputs=last_conv_layer.output,
         )
+        head_layers = model.layers[model.layers.index(base_model) + 1:]
+
+        self._cached_feature_extractor = feature_extractor
+        self._cached_head_layers = head_layers
+        self._cached_model_id = model_id
+        return feature_extractor, head_layers
+
+    # ------------------------------------------------------------------ core
+    def generate(
+        self,
+        model,
+        preprocessed_image: np.ndarray,
+        original_image: np.ndarray,
+        predicted_class: int,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Compute Grad-CAM and produce a heatmap + overlay."""
+        import tensorflow as tf
+        import gc
+
+        feature_extractor, head_layers = self._get_feature_extractor_and_head(model)
 
         # Forward pass + gradient computation
         with tf.GradientTape() as tape:
-            features = feature_extractor(preprocessed_image)
-            # Replicate downstream head computation
+            features = feature_extractor(preprocessed_image, training=False)
             x = features
-            for layer in model.layers[model.layers.index(base_model) + 1:]:
-                x = layer(x)
+            for layer in head_layers:
+                x = layer(x, training=False)
             loss = x[:, 0]
 
         # Gradients of the output w.r.t. the last conv layer
@@ -98,6 +98,9 @@ class GradCAMService:
         conv_outputs = features[0]
         heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
         heatmap = tf.squeeze(heatmap).numpy()
+
+        del tape, grads, pooled_grads, features, x, loss
+        gc.collect()
 
         # ReLU + normalise to [0, 1]
         heatmap = np.maximum(heatmap, 0)

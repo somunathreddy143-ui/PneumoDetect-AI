@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+import os
+# Configure low-memory footprint for container environments (Render 512MB RAM limit)
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
+os.environ["TF_NUM_INTEROP_THREADS"] = "1"
+
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone

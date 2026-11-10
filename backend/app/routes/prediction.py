@@ -224,7 +224,7 @@ async def predict_single(
         log_user_activity(db, current_user.id, "XRAY_UPLOAD", f"Uploaded radiograph: {filename} ({orig_array.shape[1]}x{orig_array.shape[0]})", request=request)
         log_user_activity(db, current_user.id, "PREDICTION_GENERATED", f"Prediction for {filename}: {pred_label} ({conf_pct}, Reliability: {reliability_tier})", request=request)
 
-    return PredictionResponse(
+    res_obj = PredictionResponse(
         id=record_id,
         filename=filename,
         prediction=pred_label,
@@ -245,6 +245,11 @@ async def predict_single(
         is_inconclusive=is_inconclusive,
         image_validation=suitability,
     )
+
+    import gc
+    gc.collect()
+
+    return res_obj
 
 
 # ---------------------------------------------------------------------------

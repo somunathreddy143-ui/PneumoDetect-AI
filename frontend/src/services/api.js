@@ -60,8 +60,12 @@ api.interceptors.response.use(
       }
     }
 
-    if (error.code === 'ERR_NETWORK') {
-      error.message = 'Unable to connect to the AI server. Please check your internet connection or try again later.'
+    if (error.response?.status === 502 || error.response?.status === 503) {
+      error.message = 'AI inference server is initializing or restarting. Please retry in 10-15 seconds.'
+    } else if (error.response?.status === 413) {
+      error.message = 'File size is too large. Maximum supported image size is 10 MB.'
+    } else if (error.code === 'ERR_NETWORK') {
+      error.message = 'Unable to connect to the AI server. Please verify your internet connection or try again.'
     } else if (error.response?.data?.detail) {
       const detail = error.response.data.detail
       if (typeof detail === 'string') {
@@ -121,18 +125,16 @@ export const changePassword = async (data) => {
 export const predictImage = async (file) => {
   const formData = new FormData()
   formData.append('file', file)
-  const res = await api.post('/api/predict', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  // Let the browser and Axios automatically set Content-Type with the unique multipart boundary
+  const res = await api.post('/api/predict', formData)
   return res.data
 }
 
 export const predictBatch = async (files) => {
   const formData = new FormData()
   files.forEach((f) => formData.append('files', f))
-  const res = await api.post('/api/predict/batch', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  // Let the browser and Axios automatically set Content-Type with the unique multipart boundary
+  const res = await api.post('/api/predict/batch', formData)
   return res.data
 }
 
