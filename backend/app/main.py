@@ -73,16 +73,23 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# -- CORS – allow the production Vercel frontend and localhost for development --
+# -- CORS – allow the production Vercel frontend, preview deployments, and localhost --
 _cors_origins = [
     "https://pneumo-detect-ai.vercel.app",
+    "http://pneumo-detect-ai.vercel.app",
+    "https://pneumodetect-ai.vercel.app",
+    "http://pneumodetect-ai.vercel.app",
+    "https://www.pneumo-detect-ai.vercel.app",
+    "https://www.pneumodetect-ai.vercel.app",
     "http://localhost:5173",
     "http://localhost:3000",
+    "http://localhost:8000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
+    "http://127.0.0.1:8000",
 ]
 
-# Also honour an env-var override for additional origins (comma-separated)
+# Support comma-separated extra origins from environment variable
 import os as _os
 _extra = _os.environ.get("CORS_ORIGINS", "")
 if _extra:
@@ -91,9 +98,11 @@ if _extra:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
+    allow_origin_regex=r"^https?://([a-zA-Z0-9_-]+\.)?vercel\.app(:[0-9]+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=86400,
 )
 
 # -- Routers --

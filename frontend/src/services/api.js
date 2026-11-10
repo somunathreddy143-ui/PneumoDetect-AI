@@ -1,6 +1,16 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+// Determine the backend API base URL:
+// 1. Explicit environment variable if provided (e.g. from Vercel)
+// 2. In production builds, default to the deployed Render backend
+// 3. In local development, fallback to localhost:8000
+const rawBaseUrl =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD
+    ? 'https://pneumodetect-ai.onrender.com'
+    : 'http://localhost:8000')
+
+export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '')
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -53,7 +63,14 @@ api.interceptors.response.use(
     if (error.code === 'ERR_NETWORK') {
       error.message = 'Unable to connect to the AI server. Please check your internet connection or try again later.'
     } else if (error.response?.data?.detail) {
-      error.message = error.response.data.detail
+      const detail = error.response.data.detail
+      if (typeof detail === 'string') {
+        error.message = detail
+      } else if (Array.isArray(detail)) {
+        error.message = detail.map((d) => d.msg || JSON.stringify(d)).join(', ')
+      } else {
+        error.message = JSON.stringify(detail)
+      }
     }
     return Promise.reject(error)
   }
