@@ -73,10 +73,24 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# -- CORS (allow all origins for frontend development) --
+# -- CORS – allow the production Vercel frontend and localhost for development --
+_cors_origins = [
+    "https://pneumo-detect-ai.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+
+# Also honour an env-var override for additional origins (comma-separated)
+import os as _os
+_extra = _os.environ.get("CORS_ORIGINS", "")
+if _extra:
+    _cors_origins.extend([o.strip() for o in _extra.split(",") if o.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

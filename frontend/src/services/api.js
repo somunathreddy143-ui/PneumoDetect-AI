@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -51,7 +51,7 @@ api.interceptors.response.use(
     }
 
     if (error.code === 'ERR_NETWORK') {
-      error.message = 'Unable to connect to the AI server. Please ensure the backend is running at http://localhost:8000.'
+      error.message = 'Unable to connect to the AI server. Please check your internet connection or try again later.'
     } else if (error.response?.data?.detail) {
       error.message = error.response.data.detail
     }
